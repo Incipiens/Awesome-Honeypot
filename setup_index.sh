@@ -3,11 +3,11 @@
 curl -XPOST "http://localhost:9200/_aliases" -H 'Content-Type: application/json' -d'
 {
  "actions" : [
-    { "remove" : { "index" : "*", "alias" : "cowrie-logstash" } }
+    { "remove" : { "index" : "*", "alias" : "cowrie-logstash", "must-exist": false } }
  ]
 }'
 
-curl -XDELETE "http://localhost:9200/cowrie-logstash"
+curl -XDELETE "http://localhost:9200/cowrie-logstash?ignore_unavailable=true"
 
 curl -XPUT "http://localhost:9200/cowrie-logstash" -H 'Content-Type: application/json' -d'
 {
@@ -130,4 +130,11 @@ curl -XPUT "http://localhost:9200/cowrie-logstash" -H 'Content-Type: application
 }
 }'
 
-curl -XPOST "http://localhost:5601/api/saved_objects/_import" -H "kbn-xsrf: true" --form file=@elastic-config/dashboard.ndjson
+curl -s -XPOST "http://localhost:9200/_aliases" -H 'Content-Type: application/json' -d '
+{
+  "actions":[
+    { "add": { "index":"cowrie-logstash", "alias":"cowrie-logstash", "is_write_index": true } }
+  ]
+}'
+
+curl -XPOST "http://localhost:5601/api/saved_objects/_import?overwrite=true" -H "kbn-xsrf: true" --form file=@elastic-config/dashboard.ndjson
